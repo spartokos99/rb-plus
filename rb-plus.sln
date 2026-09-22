@@ -1,0 +1,77 @@
+﻿Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{66A26720-8FB5-11D2-AA7E-00C04F688DDE}") = "RB PLUS", "RB PLUS", "{3B642F70-6702-5364-98EE-135CC3956697}"
+	ProjectSection(SolutionItems) = preProject
+		.gitattributes = .gitattributes
+		.gitignore = .gitignore
+		AGENTS.md = AGENTS.md
+		HANDOFF.md = HANDOFF.md
+		Observe-Tempo.ps1 = Observe-Tempo.ps1
+		Patch-Rekordbox.ps1 = Patch-Rekordbox.ps1
+		README.md = README.md
+		requirements-analysis.txt = requirements-analysis.txt
+		Set-TempoStep.ps1 = Set-TempoStep.ps1
+		Start-Control.cmd = Start-Control.cmd
+		Tempo-Control.ps1 = Tempo-Control.ps1
+		Test-RekordboxCompatibility.ps1 = Test-RekordboxCompatibility.ps1
+	EndProjectSection
+EndProject
+Project("{66A26720-8FB5-11D2-AA7E-00C04F688DDE}") = "native", "native", "{CC214AE1-5436-57E7-8198-3ADF9159C9A2}"
+	ProjectSection(SolutionItems) = preProject
+		native\build-extension.cmd = native\build-extension.cmd
+		native\build-loader-test.cmd = native\build-loader-test.cmd
+		native\build-ui-probe.cmd = native\build-ui-probe.cmd
+		native\build.cmd = native\build.cmd
+		native\loader_test.cpp = native\loader_test.cpp
+		native\preferences_combo.h = native\preferences_combo.h
+		native\preferences_tabs.h = native\preferences_tabs.h
+		native\quantizer.h = native\quantizer.h
+		native\quantizer_test.cpp = native\quantizer_test.cpp
+		native\setup-msvc.cmd = native\setup-msvc.cmd
+		native\tempo_extension.cpp = native\tempo_extension.cpp
+		native\tempo_hook.cpp = native\tempo_hook.cpp
+		native\ui_input_probe.cpp = native\ui_input_probe.cpp
+	EndProjectSection
+EndProject
+Project("{66A26720-8FB5-11D2-AA7E-00C04F688DDE}") = "tools", "tools", "{5AD5AFE1-9D4F-5358-98C6-20B54CFDFAFC}"
+	ProjectSection(SolutionItems) = preProject
+		tools\capture_rekordbox.ps1 = tools\capture_rekordbox.ps1
+		tools\check_compatibility.py = tools\check_compatibility.py
+		tools\deck1_probe.ps1 = tools\deck1_probe.ps1
+		tools\explore_player.py = tools\explore_player.py
+		tools\inspect_binary.py = tools\inspect_binary.py
+		tools\observe_tempo.py = tools\observe_tempo.py
+		tools\patch_app.py = tools\patch_app.py
+		tools\pe_startup_patch.py = tools\pe_startup_patch.py
+		tools\preferences_mouse.py = tools\preferences_mouse.py
+		tools\preferences_probe.ps1 = tools\preferences_probe.ps1
+		tools\tempo_control.py = tools\tempo_control.py
+		tools\ui_input_probe.py = tools\ui_input_probe.py
+		tools\verify_live.py = tools\verify_live.py
+		tools\verify_preferences_input.py = tools\verify_preferences_input.py
+	EndProjectSection
+EndProject
+Project("{66A26720-8FB5-11D2-AA7E-00C04F688DDE}") = "tests", "tests", "{0509E0DC-F741-5E06-B123-C7577D4C3F2A}"
+	ProjectSection(SolutionItems) = preProject
+		tests\test_compatibility.py = tests\test_compatibility.py
+		tests\test_local_package.py = tests\test_local_package.py
+	EndProjectSection
+EndProject
+Project("{66A26720-8FB5-11D2-AA7E-00C04F688DDE}") = "docs", "docs", "{ECE0F3F4-2D02-53EF-9A44-B9A7172A87AE}"
+	ProjectSection(SolutionItems) = preProject
+		docs\investigation-7.2.18.md = docs\investigation-7.2.18.md
+		docs\waveforms-120hz-feasibility.md = docs\waveforms-120hz-feasibility.md
+	EndProjectSection
+EndProject
+Project("{66A26720-8FB5-11D2-AA7E-00C04F688DDE}") = "compatibility", "compatibility", "{FB7D1551-3CBE-5071-A0AE-B94B4B56F57F}"
+	ProjectSection(SolutionItems) = preProject
+		compatibility\builds.json = compatibility\builds.json
+		compatibility\README.md = compatibility\README.md
+		compatibility\reports\7.2.18.0311-windows-x64.md = compatibility\reports\7.2.18.0311-windows-x64.md
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+EndGlobal

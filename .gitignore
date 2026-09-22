@@ -1,0 +1,62 @@
+# Generated tools, packages, diagnostics and private local binary fixtures
+/.tools/
+/build/
+/artifacts/
+/fixtures/
+/packages/
+/local/
+/.venv/
+/venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE / machine-local configuration
+.idea/
+.vs/
+.vscode/
+*.suo
+*.user
+*.sln.DotSettings.user
+/.agents/
+/.codex/
+
+# Never commit vendor executables, generated native binaries or crash dumps
+*.exe
+*.dll
+*.obj
+*.o
+*.lib
+*.exp
+*.pdb
+*.ilk
+*.pch
+*.dmp
+*.mdmp
+*.rb-bpm-original
+*.rbq-new
+*.zip
+*.7z
+
+# Rekordbox data, personal settings and credentials
+*.db
+*.db-*
+*.edb
+*.sqlite*
+*.settings
+rb-bpm.ini
+.env
+.env.*
+*.pem
+*.key
+*.pfx
+*.p12
+
+# Operating-system / temporary files
+Thumbs.db
+.DS_Store
+*.log
+*.tmp
+*.bak

@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "builds": [
+    {
+      "id": "7.2.18.0311-windows-x64",
+      "product_version": "7.2.18.0311",
+      "architecture": "x64",
+      "status": "supported_with_limitations",
+      "original_sha256": "a99896cf26d5998e6ad4177796a467b83df14bf8ae7207df21ed01251e402493",
+      "patched_sha256": ["297ab491ae745191b09ee72612be6d4c61075788740fb62140f93b0628337a4f"],
+      "tested_extension_sha256": ["5175314bf0b0f9dc0c07637577bca080625c660f60ac8fd2cf5809f1c812de0d"],
+      "baseline_tag": "rb-plus-7.2.18.0311-baseline",
+      "report": "compatibility/reports/7.2.18.0311-windows-x64.md",
+      "backend": "native/tempo_hook.cpp",
+      "checks": {
+        "setter_rva": "0x2c07bd0",
+        "setter_signature": "40534883ec30448b812c010000",
+        "setter_slot_rva": "0x555c668"
+      },
+      "known_limits": [
+        "DDJ-1000 hardware input untested",
+        "DVS/CDJ-800, sync and multiple loaded decks not fully validated",
+        "Track changes, mode transitions and long sessions not fully validated",
+        "Global Performance mode guard incomplete; use Default before leaving Performance",
+        "Jog bend, scratch, reverse and start/stop ramps are additional rate paths",
+        "UI tested with English Preferences at 96 DPI"
+      ]
+    }
+  ]
+}
