@@ -4,7 +4,7 @@ param(
 )
 $ErrorActionPreference='Stop'
 if (Get-Process -Name rekordbox -ErrorAction SilentlyContinue) {
-    throw 'Rekordbox vor dem Installieren oder Wiederherstellen beenden.'
+    throw 'Close Rekordbox before installing or restoring.'
 }
 & python (Join-Path $PSScriptRoot 'tools\patch_app.py') $Action.ToLowerInvariant() --exe $Exe
-if ($LASTEXITCODE -ne 0) { throw "Dateipatch fehlgeschlagen (Exit $LASTEXITCODE)." }
+if ($LASTEXITCODE -ne 0) { throw "File patch failed (exit $LASTEXITCODE)." }

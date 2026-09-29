@@ -36,7 +36,8 @@ def send(h, msg, w=0, l=0):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--preferences', type=int, required=True)
-    parser.add_argument('--select', type=int, choices=range(3), required=True)
+    parser.add_argument('--select', type=int, required=True)
+    parser.add_argument('--control', type=int, choices=[1001, 1002, 1003], default=1001)
     parser.add_argument('--hover-ms', type=int, default=600)
     parser.add_argument('--keyboard', action='store_true')
     parser.add_argument('--cancel', choices=['escape', 'outside'])
@@ -44,9 +45,12 @@ def main():
     u.SetProcessDPIAware()
     prefs = args.preferences
     panel = u.GetPropW(prefs, 'RBQ.TempoPanel')
-    combo = u.GetDlgItem(panel, 1001)
+    combo = u.GetDlgItem(panel, args.control)
     if not combo or not u.IsWindowVisible(combo):
         raise RuntimeError('RB PLUS combo is not visible')
+    count = send(combo, 0x146)
+    if not 0 <= args.select < count:
+        parser.error('Selection is outside this combo')
     pid = W.DWORD()
     thread = u.GetWindowThreadProcessId(prefs, C.byref(pid))
     info = ComboInfo(); info.size = C.sizeof(info)
@@ -89,15 +93,20 @@ def main():
             key(0x1b)
         elif args.cancel == 'outside':
             rect = W.RECT(); u.GetWindowRect(combo, C.byref(rect))
-            click(rect.left + 30, rect.bottom + 130)
+            click(rect.left - 30, rect.top + 3)
         elif args.keyboard:
             key(0x24)
             for _ in range(args.select): key(0x28)
             key(0x0d)
         else:
+            # The layout lists scroll. Navigate with real keys to expose the
+            # desired row, then select it with a real popup mouse click.
+            key(0x24)
+            for _ in range(args.select): key(0x28)
             rect = W.RECT(); u.GetWindowRect(info.list, C.byref(rect))
             item_height = send(combo, 0x154, 0)
-            x, y = rect.left + 30, rect.top + 1 + args.select*item_height + item_height//2
+            top_index = send(combo, 0x15b)
+            x, y = rect.left + 30, rect.top + 1 + (args.select-top_index)*item_height + item_height//2
             move(x, y); time.sleep(args.hover_ms/1000); sample('hover')
             click(x, y)
         time.sleep(.6); sample('after')

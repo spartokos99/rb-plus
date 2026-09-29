@@ -1,4 +1,4 @@
-﻿Microsoft Visual Studio Solution File, Format Version 12.00
+Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{66A26720-8FB5-11D2-AA7E-00C04F688DDE}") = "RB PLUS", "RB PLUS", "{3B642F70-6702-5364-98EE-135CC3956697}"
 	ProjectSection(SolutionItems) = preProject
 		.gitattributes = .gitattributes
@@ -22,6 +22,9 @@ Project("{66A26720-8FB5-11D2-AA7E-00C04F688DDE}") = "native", "native", "{CC214A
 		native\build-ui-probe.cmd = native\build-ui-probe.cmd
 		native\build.cmd = native\build.cmd
 		native\loader_test.cpp = native\loader_test.cpp
+		native\layout_extension.h = native\layout_extension.h
+		native\layout_order.h = native\layout_order.h
+		native\layout_order_test.cpp = native\layout_order_test.cpp
 		native\preferences_combo.h = native\preferences_combo.h
 		native\preferences_tabs.h = native\preferences_tabs.h
 		native\quantizer.h = native\quantizer.h
@@ -35,11 +38,15 @@ EndProject
 Project("{66A26720-8FB5-11D2-AA7E-00C04F688DDE}") = "tools", "tools", "{5AD5AFE1-9D4F-5358-98C6-20B54CFDFAFC}"
 	ProjectSection(SolutionItems) = preProject
 		tools\capture_rekordbox.ps1 = tools\capture_rekordbox.ps1
+		tools\build_release.py = tools\build_release.py
+		tools\release_patch.py = tools\release_patch.py
 		tools\check_compatibility.py = tools\check_compatibility.py
 		tools\deck1_probe.ps1 = tools\deck1_probe.ps1
 		tools\explore_player.py = tools\explore_player.py
 		tools\inspect_binary.py = tools\inspect_binary.py
 		tools\observe_tempo.py = tools\observe_tempo.py
+		tools\observe_layout.py = tools\observe_layout.py
+		tools\verify_layout_input.py = tools\verify_layout_input.py
 		tools\patch_app.py = tools\patch_app.py
 		tools\pe_startup_patch.py = tools\pe_startup_patch.py
 		tools\preferences_mouse.py = tools\preferences_mouse.py
@@ -54,11 +61,13 @@ Project("{66A26720-8FB5-11D2-AA7E-00C04F688DDE}") = "tests", "tests", "{0509E0DC
 	ProjectSection(SolutionItems) = preProject
 		tests\test_compatibility.py = tests\test_compatibility.py
 		tests\test_local_package.py = tests\test_local_package.py
+		tests\test_release_package.py = tests\test_release_package.py
 	EndProjectSection
 EndProject
 Project("{66A26720-8FB5-11D2-AA7E-00C04F688DDE}") = "docs", "docs", "{ECE0F3F4-2D02-53EF-9A44-B9A7172A87AE}"
 	ProjectSection(SolutionItems) = preProject
 		docs\investigation-7.2.18.md = docs\investigation-7.2.18.md
+		docs\layout-7.2.18.md = docs\layout-7.2.18.md
 		docs\waveforms-120hz-feasibility.md = docs\waveforms-120hz-feasibility.md
 	EndProjectSection
 EndProject
@@ -67,6 +76,12 @@ Project("{66A26720-8FB5-11D2-AA7E-00C04F688DDE}") = "compatibility", "compatibil
 		compatibility\builds.json = compatibility\builds.json
 		compatibility\README.md = compatibility\README.md
 		compatibility\reports\7.2.18.0311-windows-x64.md = compatibility\reports\7.2.18.0311-windows-x64.md
+	EndProjectSection
+EndProject
+Project("{66A26720-8FB5-11D2-AA7E-00C04F688DDE}") = "release", "release", "{AD5C9825-9C70-4BEE-B777-7D0BB1ED59F0}"
+	ProjectSection(SolutionItems) = preProject
+		release\README.txt = release\README.txt
+		release\Setup.ps1 = release\Setup.ps1
 	EndProjectSection
 EndProject
 Global

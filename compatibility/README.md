@@ -1,107 +1,106 @@
-# Versionspflege ohne Verlust älterer Unterstützung
+# Version maintenance without losing older support
 
-Der Auftrag „Neue Rekordbox-Version unter <Pfad>, bitte kompatibel machen“
-umfasst Erkennung, Untersuchung, gegebenenfalls Anpassung, Tests und eine
-aktualisierte Übergabe. **Neue Versionen werden zusätzlich unterstützt.**
+A request to support a new Rekordbox version at a supplied path includes detection,
+investigation, necessary changes, tests and an updated handoff.
+**Support for new versions is additive.**
 
-## Aktuell geprüfte Builds
+## Currently verified builds
 
-| Build | Plattform | Stand | Nachweis |
+| Build | Platform | Status | Evidence |
 | --- | --- | --- | --- |
-| 7.2.18.0311 | Windows x64 | Unterstützt mit dokumentierten Grenzen | [Bericht](reports/7.2.18.0311-windows-x64.md) |
+| 7.2.18.0311 | Windows x64 | Supported with documented limitations | [Report](reports/7.2.18.0311-windows-x64.md) |
 
-`builds.json` ist das maschinenlesbare Register. Produktnamen wie „7.2.18“ reichen
-nicht: exakter SHA-256, Architektur und geprüfte Code-Stellen gehören zur
-Identität. Unbekannte Dateien werden abgelehnt, auch bei gleicher Versionsanzeige.
+`builds.json` is the machine-readable registry. A product name such as “7.2.18”
+is insufficient: identity includes exact SHA-256, architecture and verified code
+locations. Unknown files are rejected even if their displayed version matches.
 
-## 1. Nur lesende Erstprüfung
+## 1. Initial read-only check
 
 ```powershell
-.\Test-RekordboxCompatibility.ps1 -Path 'D:\Programs\rekordbox NEU'
-# Alternativ:
-python tools/check_compatibility.py --path 'D:\Programs\rekordbox NEU\rekordbox.exe'
+.\Test-RekordboxCompatibility.ps1 -Path 'D:\Programs\rekordbox NEW'
+# Alternative:
+python tools/check_compatibility.py --path 'D:\Programs\rekordbox NEW\rekordbox.exe'
 ```
 
-Der Checker startet Rekordbox nicht und schreibt weder Dateien noch Prozessspeicher.
-Exit 0 = bekannter Build mit passenden statischen Merkmalen; Exit 2 = unbekannt,
-inkonsistent oder nicht lesbar. Bei einer gepatchten Installation werden Manifest,
-Original-Sicherung und DLL-Integrität zusätzlich geprüft. Eine neu kompilierte DLL
-kann zum Manifest passen, ohne eine historisch getestete DLL zu sein: das separate
-Feld `extension_tested_release` beachten. `runtime_tested_this_run` ist immer false.
+The checker does not start Rekordbox or write files/process memory. Exit 0 means
+a known build with matching static properties; exit 2 means unknown, inconsistent
+or unreadable. For patched installations it also checks the manifest, original
+backup and DLL integrity. A newly compiled DLL can match its manifest without
+being a historically tested release: inspect `extension_tested_release` separately.
+`runtime_tested_this_run` is always false.
 
-Ein erfolgreicher Check ist **keine** automatische Freigabe neuer Versionen und
-kein Audio-/Hardwaretest. Wenn der Build unbekannt ist, Analyse mit
-`tools/inspect_binary.py --exe <EXE>` durchführen; den alten Native-Hook nicht laden.
+A successful check does **not** automatically approve a new version and is not
+an audio/hardware test. For an unknown build, investigate using
+`tools/inspect_binary.py --exe <EXE>`; do not load the old native hook.
 
-## 2. Baselines erhalten
+## 2. Preserve baselines
 
-- Vor Änderungen bisherige Profile und Quellstand sichern/taggen. Der erste
-  Stand trägt `rb-plus-7.2.18.0311-baseline`.
-- Legale lokale Original-EXEs/Testkopien je Build unter `fixtures/<build-id>/`
-  aufbewahren; Hash prüfen. Dieses Verzeichnis wird nicht eingecheckt.
-- Neue Offsets, ABI und Layouts als zusätzlichen Backend/Adapter aufnehmen.
-  Gemeinsame Quantisierung und UI nur ändern, wenn die alten Backends weiterhin
-  passen oder gezielt getrennte Implementierungen erhalten.
-- Vor Aufnahme des zweiten Builds: Native- und Python-Backend-Auswahl sowie
-  Installer auf exakte Build-Zuordnung erweitern. Heutige Hardcodierungen in
-  `tempo_hook.cpp`, `tempo_extension.cpp`, `observe_tempo.py`, `tempo_control.py`
-  und `patch_app.py` dabei nicht einfach auf den neuen Build umstellen.
-- Pakete ab dann unter `build/packages/<build-id>/` isolieren und Installer mit
-  passendem Profil/Paket aufrufen. Das aktuelle `build/permanent` ist ausschließlich
-  der Legacy-Paketpfad für 7.2.18. Nie ein neues Paket als das alte ausgeben.
-- Alte Profile, Backend-Quellen und Testfälle bleiben auf dem aktuellen Branch.
-  Ein Git-Tag allein ersetzt keine weiterhin funktionierende Versionsauswahl.
+- Preserve/tag existing profiles and source before changing them. The initial
+  baseline is `rb-plus-7.2.18.0311-baseline`.
+- Keep legally available local original EXEs/test copies per build under
+  `fixtures/<build-id>/`; verify their hashes. This directory is not committed.
+- Add new offsets, ABI and layouts as another backend/adapter. Change shared
+  quantization and UI only if old backends still work or get separate implementations.
+- Before adding a second build, extend native/Python backend selection and the
+  installer to use exact build identities. Do not simply retarget hardcoded values
+  in `tempo_hook.cpp`, `tempo_extension.cpp`, `observe_tempo.py`, `tempo_control.py`
+  and `patch_app.py` to the new build.
+- From then on, isolate packages under `build/packages/<build-id>/` and invoke the
+  installer with the matching profile/package. `build/permanent` is currently the
+  legacy path for 7.2.18 only. Never present a new package as an old one.
+- Keep old profiles, backend sources and test cases on the current branch.
+  A Git tag alone does not replace working version selection.
 
-## 3. Neue Pipeline vor Eingriffen belegen
+## 3. Establish the new pipeline before modifying it
 
-Den zentralen Tempo-Sollwertpfad bis zur Audio-Rate nachvollziehen. Erneut prüfen:
-Signaturen, VTable-Slot, Calling Convention, relative Pitch-Darstellung,
-Track-/Grid-Zugriff, Grenzwerte, Threads und Request-Funktion für Neuanwendung.
-Kein bloßes Verschieben alter RVAs um einen geratenen Offset.
+Trace the central tempo request through to the audio rate. Recheck signatures,
+VTable slot, calling convention, relative pitch representation, track/grid access,
+limits, threads and the request function used to reapply a setting. Do not shift
+old RVAs by a guessed offset.
 
-Natives Setting und Eingabewege separat prüfen. UIA-Namen, Kategorien, Handles,
-COM-Verhalten und Popup-Eingaben können sich unabhängig von der Audio-Engine ändern.
-Profile erst nach Belegen und Tests freigeben; reine Kandidaten bleiben im Bericht.
+Verify native settings and input paths separately. UIA names, categories, handles,
+COM behavior and popup input can change independently of the audio engine.
+Approve profiles only with evidence and tests; record unconfirmed candidates as such.
 
-## 4. Verbindliche Prüfmatrix
+## 4. Required test matrix
 
-Für jeden neuen Build und als Regression für **jeden** schon unterstützten Build:
+Run for every new build and as a regression for **every** previously supported build:
 
-| Bereich | Prüfung / Erfolgskriterium |
+| Area | Check / success criterion |
 | --- | --- |
-| Identität | Unverändertes Original, exakter Hash/Architektur; fremde Builds abgelehnt |
-| Offline | Python-Tests, Quantisierung/Hysterese, `/W4 /WX` Native-Builds |
-| PE/Paket | Probe an lokaler Kopie: vorbereiten, installieren, wiederholen, DLL-Update, Rückbau mit Original-SHA; INI/Backup erhalten |
-| Autostart | Regulärer Start lädt genau eine passende Erweiterung, kein Hilfsprozess nötig |
-| Engine | Default bleibt unverändert; Integer und Zehntel mit Original-BPM 174 oder dokumentiertem anderem Track; Audio-Part-Rate messen |
-| Grenzen/Hysterese | Langsamer Sweep, Schwellenrauschen, Sprünge, Min/Max; keine unerwarteten Zwischenwerte |
-| Live-Umschalten | Bereits erfasstes Deck übernimmt neuen Modus ohne nächste Faderbewegung |
-| Metadaten | Original-/Grid-BPM unverändert; keine Schreibpfade zu Analyse/Datenbank hinzufügen |
-| Eingaben | GUI-Fader, manuelle BPM, DDJ-1000 und sonstige verfügbare Hardware; jeweils Beleg oder explizit ungetestet |
-| UI | Extensions → RB PLUS, alle Modi mit echten Mausklicks und Tastatur, Escape/Außenklick, ursprüngliche Tabs, Kategorie-Wechsel |
-| Lebensdauer | Mehrfach Preferences schließen/öffnen, Neustart mit gespeichertem Modus, keine zusätzlichen Hooks/Crashes |
-| Weitere Pfade | Mehrere Decks, Track-/Moduswechsel, Sync/DVS, Bend/Scratch/Reverse; offene Grenzen separat führen |
-| Last | CPU/GUI-Reaktion und Audio-Stabilität während eines dokumentierten längeren Tests |
+| Identity | Unchanged original, exact hash/architecture; other builds rejected |
+| Offline | Python tests, quantization/hysteresis, `/W4 /WX` native builds |
+| PE/package | On a local copy: prepare, install, repeat, DLL update, restore original SHA; preserve INI/backup |
+| Startup | Normal startup loads exactly one matching extension; no helper required |
+| Engine | Default passes through; integer/tenth modes with original BPM 174 or another documented track; measure audio-part rate |
+| Limits/hysteresis | Slow sweep, threshold noise, jumps, min/max; no unexpected intermediate values |
+| Live switching | Previously detected deck applies a new mode without another fader movement |
+| Metadata | Original/grid BPM unchanged; no new analysis/database write paths |
+| Inputs | GUI fader, manual BPM, DDJ-1000 and other available hardware; evidence or explicitly untested |
+| UI | Extensions → RB PLUS, all modes using actual mouse and keyboard, Escape/outside clicks, original tabs, category changes |
+| Lifetime | Repeated Preferences close/reopen, restart with saved mode, no extra hooks/crashes |
+| 4Deck Horizontal | Independent wave/deck orders: all 24 plus Default; real components/numbers, input and drop targets; other layouts unchanged, return/restart reapplies selections |
+| Other paths | Multiple decks, track/mode changes, Sync/DVS, bend/scratch/reverse; retain open limitations separately |
+| Load | CPU/GUI responsiveness and audio stability during a documented extended test |
 
-Nur wirklich durchgeführte Prüfungen als bestanden melden. Fehlen historische
-Installationen/Hardware, die unabhängigen Arbeiten erledigen und die fehlende
-Regression konkret ausweisen. Nicht die bisherige Unterstützung löschen, um eine
-Prüflücke zu umgehen. Keinen laufenden Auftritt für einen Test unterbrechen.
+Report only tests actually performed as passing. If historical installations or
+hardware are unavailable, complete independent work and identify the missing
+regression specifically. Do not remove existing support to conceal a gap. Never
+interrupt a live performance for testing.
 
-`tools/verify_live.py` steuert den alten Diagnose-Hook und benötigt spezielle
-Vorbedingungen (HANDOFF). Für einen neuen permanenten Backend muss dieser Testweg
-angepasst oder ein entsprechender Integrationstest ergänzt werden; nicht beide
-Hooks gleichzeitig installieren. Die Mausprüfer bewegen den echten Cursor und
-ändern das Setting; nur im geeigneten Testzustand einsetzen.
+`tools/verify_live.py` controls the older diagnostic hook and requires specific
+preconditions (see HANDOFF). Adapt that path or add an appropriate integration
+test for a new permanent backend; never install both hooks together. Mouse testers
+move the real cursor and change settings; use only in an appropriate test state.
 
-## 5. Abschluss
+## 5. Finish
 
-- Pro Build `compatibility/reports/<build-id>.md` mit Datum, Original-/Patch-/DLL-
-  Hashes, Belegen, Prüfergebnissen und weiterhin offenen Punkten führen.
-- `builds.json`, diese Matrix, README und HANDOFF additiv aktualisieren.
-- Neue und alte Pakete unterscheidbar, reproduzierbar und gemeinsam nutzbar halten.
-- Ergebnis an den Benutzer: neue Version, alte erhaltene Versionen, tatsächlich
-  wiederholte Tests, konkrete Grenzen. Hardware-Coverage nicht pauschal zusagen.
-- Quellcode/Prüfberichte einchecken; keine Rekordbox-EXEs, Datenbanken oder Dumps
-  in Git oder GitHub-Releases hochladen. Eigene Release-DLLs nur gesondert, wenn
-  tatsächlich als Release beauftragt und pro Build geprüft.
+- Maintain `compatibility/reports/<build-id>.md` with dates, original/patched/DLL
+  hashes, evidence, results and remaining limitations.
+- Update `builds.json`, this matrix, README and HANDOFF additively.
+- Keep new and old packages distinguishable, reproducible and usable together.
+- Report the new version, preserved old versions, tests actually repeated and
+  specific limits. Do not claim blanket hardware coverage.
+- Commit source and reports, never Rekordbox EXEs, databases or dumps to Git or
+  GitHub releases. Our own DLLs may be released separately only when a release is
+  requested and the exact build has been tested.

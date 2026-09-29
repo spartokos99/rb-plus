@@ -21,8 +21,9 @@ static DWORD hookOwnerThread = 0;
 static SRWLOCK settingsLock = SRWLOCK_INIT;
 static std::atomic<bool> booted{false};
 extern "C" __declspec(dllexport) DWORD rbqUiTelemetry[8]{};
-struct Ui { HWND combo = nullptr, note = nullptr; HFONT font = nullptr; };
+struct Ui { HWND combo = nullptr, note = nullptr, wave = nullptr, decks = nullptr, layoutNote = nullptr; HFONT font = nullptr; };
 #include "preferences_combo.h"
+#include "layout_extension.h"
 
 static void reapplyKnownDecks() {
     // Run only on the original GUI thread. Use Rekordbox's existing request
@@ -76,11 +77,37 @@ static LRESULT CALLBACK panelProc(HWND h, UINT message, WPARAM w, LPARAM l) {
         SendMessageW(ui->combo,CB_ADDSTRING,0,reinterpret_cast<LPARAM>(L"0.1 BPM"));
         SendMessageW(ui->combo,CB_ADDSTRING,0,reinterpret_cast<LPARAM>(L"1 BPM (integer)"));
         SendMessageW(ui->combo,CB_SETCURSEL,mode.load(),0);
-        ui->note = CreateWindowExW(0,L"STATIC",L"Quantisiert das Live-Tempo der Performance-Decks.\nOriginal-BPM und Beatgrid bleiben unveraendert.",WS_CHILD|WS_VISIBLE,
+        ui->note = CreateWindowExW(0,L"STATIC",L"Quantizes the live tempo of Performance decks.\nOriginal BPM and beatgrids remain unchanged.",WS_CHILD|WS_VISIBLE,
                                    scale(h,20),scale(h,80),scale(h,540),scale(h,56),h,nullptr,extensionModule,nullptr);
         for (HWND child : {label,ui->combo,ui->note}) SendMessageW(child,WM_SETFONT,reinterpret_cast<WPARAM>(ui->font),TRUE);
-        if (!installComboInput(ui->combo))
-            SetWindowTextW(ui->note,L"Maussteuerung konnte nicht initialisiert werden.\nBitte die Einstellungen erneut oeffnen.");
+        for (int row=0;row<2;++row) {
+            const wchar_t* title=row==0 ? L"Waveforms (top to bottom)" : L"Decks (top / bottom)";
+            HWND caption=CreateWindowExW(0,L"STATIC",title,WS_CHILD|WS_VISIBLE,
+                scale(h,20),scale(h,152+row*48),scale(h,215),scale(h,24),h,nullptr,extensionModule,nullptr);
+            HWND combo=CreateWindowExW(0,L"COMBOBOX",title,WS_CHILD|WS_VISIBLE|WS_TABSTOP|CBS_DROPDOWNLIST|WS_VSCROLL,
+                scale(h,240),scale(h,150+row*48),scale(h,280),scale(h,260),h,
+                reinterpret_cast<HMENU>(static_cast<INT_PTR>(1002+row)),extensionModule,nullptr);
+            (row==0 ? ui->wave : ui->decks)=combo;
+            SendMessageW(combo,CB_ADDSTRING,0,reinterpret_cast<LPARAM>(L"Default (Rekordbox)"));
+            for (unsigned i=1;i<=24;++i) {
+                const auto order=rbq::layoutOrder(i);
+                wchar_t text[64]{};
+                swprintf_s(text,row==0 ? L"%d - %d - %d - %d" : L"%d - %d  /  %d - %d",
+                    order[0]+1,order[1]+1,order[2]+1,order[3]+1);
+                SendMessageW(combo,CB_ADDSTRING,0,reinterpret_cast<LPARAM>(text));
+            }
+            SendMessageW(combo,CB_SETCURSEL,row==0 ? waveOrder : deckOrder,0);
+            SendMessageW(combo,CB_SETMINVISIBLE,10,0);
+            for (HWND child : {caption,combo}) SendMessageW(child,WM_SETFONT,reinterpret_cast<WPARAM>(ui->font),TRUE);
+            EnableWindow(combo,layoutInstalled);
+        }
+        ui->layoutNote=CreateWindowExW(0,L"STATIC",layoutInstalled ?
+            L"Performance: 4Deck Horizontal only. Both orders are independent.\nDecks: top left - right / bottom left - right.\nDefault restores the Rekordbox arrangement." :
+            L"Layout customization is unavailable for this application build.",WS_CHILD|WS_VISIBLE,
+            scale(h,20),scale(h,248),scale(h,550),scale(h,72),h,nullptr,extensionModule,nullptr);
+        SendMessageW(ui->layoutNote,WM_SETFONT,reinterpret_cast<WPARAM>(ui->font),TRUE);
+        if (!installComboInput(ui->combo) || !installComboInput(ui->wave) || !installComboInput(ui->decks))
+            SetWindowTextW(ui->note,L"Mouse input could not be initialized.\nPlease close and reopen Preferences.");
         SetTimer(h,1,400,nullptr);
         return 0;
     }
@@ -96,11 +123,21 @@ static LRESULT CALLBACK panelProc(HWND h, UINT message, WPARAM w, LPARAM l) {
         if (selected >= 0 && selected <= 2) {
             if (!setPreference(static_cast<uint32_t>(selected))) {
                 SendMessageW(ui->combo,CB_SETCURSEL,mode.load(),0);
-                MessageBoxW(h,L"Die Auswahl konnte nicht in rb-bpm.ini gespeichert werden.",L"BPM / Tempo Step",MB_OK|MB_ICONERROR);
+                MessageBoxW(h,L"Could not save the selection to rb-bpm.ini.",L"BPM / Tempo Step",MB_OK|MB_ICONERROR);
                 return 0;
             }
             reapplyKnownDecks();
-            SetWindowTextW(ui->note,L"Gespeichert. Gilt fuer das Live-Tempo der Performance-Decks.\nOriginal-BPM und Beatgrid bleiben unveraendert.");
+            SetWindowTextW(ui->note,L"Saved. Applies to the live tempo of Performance decks.\nOriginal BPM and beatgrids remain unchanged.");
+        }
+        return 0;
+    }
+    if (message==WM_COMMAND && ui && (LOWORD(w)==1002 || LOWORD(w)==1003) && HIWORD(w)==CBN_SELCHANGE) {
+        const bool waves=LOWORD(w)==1002;
+        const HWND combo=waves ? ui->wave : ui->decks;
+        const LRESULT selected=SendMessageW(combo,CB_GETCURSEL,0,0);
+        if (selected>=0 && selected<=24 && !saveLayoutOrder(waves,static_cast<unsigned>(selected))) {
+            SendMessageW(combo,CB_SETCURSEL,waves ? waveOrder : deckOrder,0);
+            MessageBoxW(h,L"Could not save the selection to rb-bpm.ini.",L"RB PLUS",MB_OK|MB_ICONERROR);
         }
         return 0;
     }
@@ -111,6 +148,8 @@ static LRESULT CALLBACK panelProc(HWND h, UINT message, WPARAM w, LPARAM l) {
     }
     if (message == WM_NCDESTROY && ui) {
         removeComboInput(ui->combo);
+        removeComboInput(ui->wave);
+        removeComboInput(ui->decks);
         KillTimer(h,1);
         DeleteObject(ui->font);
         SetWindowLongPtrW(h,GWLP_USERDATA,0);
@@ -161,6 +200,8 @@ extern "C" __declspec(dllexport) DWORD WINAPI rbqBootstrapOnThread(void* value) 
     cfg.mode = loadMode();
     rbqConfigure(&cfg);
     guiThread = value ? *static_cast<const DWORD*>(value) : GetCurrentThreadId();
+    loadLayoutOrders();
+    installLayout();
     panelBrush = CreateSolidBrush(RGB(32,32,32));
     WNDCLASSW cls{};
     cls.hInstance=extensionModule; cls.lpfnWndProc=panelProc; cls.lpszClassName=PanelClass;

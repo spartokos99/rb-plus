@@ -8,7 +8,11 @@
       "status": "supported_with_limitations",
       "original_sha256": "a99896cf26d5998e6ad4177796a467b83df14bf8ae7207df21ed01251e402493",
       "patched_sha256": ["297ab491ae745191b09ee72612be6d4c61075788740fb62140f93b0628337a4f"],
-      "tested_extension_sha256": ["5175314bf0b0f9dc0c07637577bca080625c660f60ac8fd2cf5809f1c812de0d"],
+      "tested_extension_sha256": [
+        "5175314bf0b0f9dc0c07637577bca080625c660f60ac8fd2cf5809f1c812de0d",
+        "f489f8c171f23a5eaa9b1ca13c19d03b93540d433347972efff2d270e093fe40",
+        "2ae31532ce79c1423c5a7cf0f921a71fa2b4ee97fa20224b03644b0dfb811c27"
+      ],
       "baseline_tag": "rb-plus-7.2.18.0311-baseline",
       "report": "compatibility/reports/7.2.18.0311-windows-x64.md",
       "backend": "native/tempo_hook.cpp",

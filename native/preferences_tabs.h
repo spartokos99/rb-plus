@@ -152,7 +152,7 @@ static LRESULT CALLBACK tabsSubclass(HWND h, UINT m, WPARAM w, LPARAM l, UINT_PT
     }
     if (m==WM_KEYDOWN && w==VK_TAB) {
         const auto ui=preferencesUi(GetParent(h));
-        if (ui && ui->plus) { SetFocus(GetDlgItem(ui->panel,1001)); return 0; }
+        if (ui && ui->plus) { SetFocus(GetDlgItem(ui->panel,GetKeyState(VK_SHIFT)<0 ? 1003 : 1001)); return 0; }
     }
     if (m==WM_SETFOCUS || m==WM_KILLFOCUS) InvalidateRect(h,nullptr,FALSE);
     return DefSubclassProc(h,m,w,l);
@@ -160,7 +160,11 @@ static LRESULT CALLBACK tabsSubclass(HWND h, UINT m, WPARAM w, LPARAM l, UINT_PT
 static LRESULT CALLBACK comboNavigation(HWND h, UINT m, WPARAM w, LPARAM l, UINT_PTR, DWORD_PTR) {
     if (m==WM_KEYDOWN && w==VK_TAB) {
         const auto ui=preferencesUi(GetParent(GetParent(h)));
-        if (ui) { SetFocus(ui->tabs); return 0; }
+        if (ui) {
+            const int next=GetDlgCtrlID(h)+(GetKeyState(VK_SHIFT)<0 ? -1 : 1);
+            const HWND target=next>=1001 && next<=1003 ? GetDlgItem(ui->panel,next) : ui->tabs;
+            SetFocus(IsWindowEnabled(target) ? target : ui->tabs); return 0;
+        }
     }
     return DefSubclassProc(h,m,w,l);
 }
@@ -247,7 +251,7 @@ static void attachPreferences(HWND h) {
     }
     TabCtrl_SetItemSize(ui->tabs,scale(h,86),scale(h,28));
     SetWindowSubclass(ui->tabs,tabsSubclass,1,0);
-    SetWindowSubclass(GetDlgItem(ui->panel,1001),comboNavigation,1,0);
+    for (int id=1001;id<=1003;++id) SetWindowSubclass(GetDlgItem(ui->panel,id),comboNavigation,1,0);
     SetPropW(h,PanelProperty,ui->panel); SetPropW(h,TabsProperty,ui->tabs);
     ++rbqUiTelemetry[3];
     requestedNativeTab.store(-1); ++preferencesGeneration;

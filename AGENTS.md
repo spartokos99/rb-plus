@@ -1,82 +1,79 @@
-# RB PLUS: Arbeitsanweisungen für Coding-Agents
+# RB PLUS: Instructions for coding agents
 
-## Einstieg
+## Start here
 
-Lies zuerst `HANDOFF.md`, dann `compatibility/README.md`. Dieses private Repo
-enthält unseren Quellcode; Rekordbox-Binaries, Musik, Datenbanken, Dumps und
-lokale Messdaten gehören nicht ins Git. Der Build verwendet die Skripte unter
-`native/`; die Solution dient der Navigation.
+Read `HANDOFF.md` first, then `compatibility/README.md`. This private repository
+contains our source code. Rekordbox binaries, music, databases, dumps and local
+measurements must stay out of Git. Build using the scripts under `native/`;
+the solution is for navigation.
 
-## Produkt und Grenzen
+## Product and boundaries
 
-- Windows x64, Zusatzseite **Preferences → Extensions → RB PLUS**.
-- Default, 0.1 BPM und 1 BPM quantisieren ausschließlich den Live-Basis-Tempo-
-  Sollwert der Performance-Decks. Audio-Rate prüfen, nicht nur Displaytexte.
-- Keine Änderungen an Track-BPM, Metadaten, Beatgrid oder Datenbank.
-- Herstellerlizenzen/Abonnements und ihre Prüfungen sind nicht Teil dieses Projekts.
-- Die Waveform-/120-Hz-Idee wurde vom Benutzer ausdrücklich verworfen. Nicht
-  wieder aufnehmen, sofern der Benutzer sie nicht neu beauftragt.
-- Bekannte Grenzen und ungetestete Hardware in README und Versionsbericht
-  ehrlich erhalten. Ein bekannter EXE-Hash ist kein vollständiger Laufzeittest.
+- Windows x64, additional page **Preferences → Extensions → RB PLUS**.
+- Default, 0.1 BPM and 1 BPM apply only to the live base tempo request of
+  Performance decks. Verify the audio rate, not just displayed text.
+- Do not change track BPM, metadata, beatgrids or databases.
+- Vendor licenses/subscriptions and their checks are outside this project's scope.
+- The user explicitly abandoned the waveform/120 Hz idea. Do not resume it unless
+  the user requests it again.
+- Preserve known limitations and untested hardware honestly in README and version
+  reports. A known EXE hash is not a complete runtime test.
 
-## Wenn der Benutzer eine neue Rekordbox-Version nennt
+## When the user names a new Rekordbox version
 
-Eine Anweisung wie „Ich habe eine neue Version unter <Pfad> installiert,
-stelle sicher, dass sie mit unserem Patch kompatibel ist“ aktiviert den
-vollständigen Ablauf in `compatibility/README.md`. Der Benutzer muss weder alte
-Erkenntnisse wiederholen noch die einzelnen Prüfungen aufzählen.
+An instruction such as “I installed a new version at <path>; make sure it works
+with our patch” activates the complete workflow in `compatibility/README.md`.
+The user does not need to repeat previous findings or list individual checks.
 
-1. Zuerst den angegebenen Pfad mit `Test-RekordboxCompatibility.ps1` nur lesend
-   prüfen und den exakten Build identifizieren. Unbekannte Builds nicht mit den
-   bisherigen Adressen injizieren oder patchen.
-2. Vor Implementierung den Tempo-/Playback-Pfad der neuen Version untersuchen.
-   Vorhandene Signaturen sind Hinweise; ABI, Objektoffsets, VTables, Threading,
-   Grid-Zugriff und Neuanwendung müssen belegt sein.
-3. Unterstützung **additiv** ergänzen. Alte Einträge in `compatibility/builds.json`
-   und alte funktionsfähige Backends nicht durch neue Offsets ersetzen. Vor dem
-   zweiten unterstützten Build die heute noch fest gebundenen Native-/Python-
-   Backends getrennt auswählbar machen (exakte Hash-Zuordnung, kein Fallback auf
-   die „neueste“ Version). Getrennte Pakete je Build; niemals ein globales
-   `EXPECTED` auf den neuen Build umschreiben und damit alte Builds ausschließen.
-4. Neue und alle bisher unterstützten Versionen nach der Prüfmatrix testen.
-   Historische Ergebnisse getrennt von aktuell wiederholten Tests ausweisen.
-   Fehlt eine alte lokale EXE oder Hardware, Arbeit fortsetzen und die konkret
-   fehlende Prüfung melden; keine Regression als bestanden erfinden.
-5. Erst nach passender statischer Prüfung Runtime-Tests/Installation durchführen.
-   Vor Neustarts Wiedergabezustand prüfen; laufende Sets nicht unterbrechen.
-   Regulär schließen, nie blind Prozesse abschießen. Backups und INI erhalten.
-6. Profil, Bericht, Matrix, HANDOFF und README aktualisieren. Den neuen Stand
-   erst als unterstützt ausweisen, wenn die dort verlangten Kriterien erfüllt
-   sind; offene Einschränkungen benennen. Frühere Unterstützung beibehalten.
+1. First perform a read-only check of the supplied path using
+   `Test-RekordboxCompatibility.ps1` and identify the exact build. Do not inject
+   or patch unknown builds using existing addresses.
+2. Investigate the new version's tempo/playback path before implementation.
+   Existing signatures are clues; ABI, object offsets, VTables, threading,
+   grid access and reapplication must be supported by evidence.
+3. Add support **additively**. Do not replace old `compatibility/builds.json`
+   entries or working backends with new offsets. Before supporting a second build,
+   make the currently fixed native/Python backends separately selectable using
+   exact hash matching, with no fallback to the “latest” version. Keep packages
+   separate per build. Never rewrite a global `EXPECTED` to exclude old builds.
+4. Test the new and all previously supported versions against the matrix.
+   Separate historical results from tests actually repeated now. If an old local
+   EXE or hardware is unavailable, continue independent work and report the
+   specific missing check. Do not invent successful regressions.
+5. Perform runtime tests/installation only after matching static checks. Check
+   playback before restarting; do not interrupt a running set. Close normally,
+   never blindly terminate processes. Preserve backups and the INI.
+6. Update the profile, report, matrix, HANDOFF and README. Mark a build supported
+   only after meeting the specified criteria; name remaining limitations and
+   preserve prior support.
 
-Routineanalysen, lokale Builds, Korrekturen und Tests sind Teil dieses Auftrags.
-Keine wiederholten Bestätigungen verlangen, wenn die Sitzung diese Arbeiten
-bereits autorisiert. Fehlende Testdaten/Hardware sind konkrete Rückfragen, keine
-pauschale neue Freigabestufe. GitHub-Pushs erfolgen nur im autorisierten Umfang.
+Routine analysis, local builds, fixes and tests are part of this task. Do not
+request repeated confirmation for work already authorized in the session.
+Missing test data/hardware calls for a specific question, not a general approval
+stage. GitHub pushes must stay within the authorized scope.
 
-## Laufzeit- und UI-Regeln
+## Runtime and UI rules
 
-- Keine globalen Eingabe-Hooks. Die Dropdown-Korrektur ist ausschließlich auf
-  das eigene Popup und den GUI-Thread begrenzt.
-- UI-Automation auf dem MTA-Worker halten; GUI-Arbeit auf dem GUI-Thread.
-- COM-Erfolg **und** nicht-null Interface prüfen. JUCE kann bei verschwundenen
-  Controls `S_OK` mit null liefern (bereits durch Crash-Dump belegt).
-- Keine langlebigen UIA-Button-Caches: Kategorien erzeugen neue Controls.
-- UI mit echten Mausklicks testen. `CB_SETCURSEL` plus `WM_COMMAND` hat den
-  ursprünglichen Popup-Fehler verdeckt. Auch Keyboard, Escape, Außenklick und
-  Schließen/Öffnen testen. Cursorposition danach wiederherstellen.
-- Keine Frida-Instrumentierung erneut einsetzen: frühere Probe verursachte
-  einen Rekordbox-Absturz. Bevorzugt statische Analyse und lesender Beobachter.
-- Native DLL bleibt während der Prozesslebensdauer geladen; kein unsicheres
-  Entladen eines Hooks, der noch aus einem anderen Thread erreichbar ist.
+- No global input hooks. The dropdown fix is limited to its own popup and GUI thread.
+- Keep UI Automation on the MTA worker and GUI work on the GUI thread.
+- Check COM success **and** a non-null interface. JUCE may return `S_OK` with null
+  for disappeared controls; a previous crash dump established this.
+- No long-lived UIA button caches: category changes create new controls.
+- Test UI with real mouse clicks. `CB_SETCURSEL` plus `WM_COMMAND` masked the
+  original popup bug. Also test keyboard input, Escape, outside clicks and
+  closing/reopening. Restore the cursor position afterwards.
+- Do not use Frida instrumentation again: an earlier probe crashed Rekordbox.
+  Prefer static analysis and a read-only observer.
+- The native DLL stays loaded for the process lifetime. Never unload a hook
+  that another thread may still reach.
 
-## Prüfungen und Übergabe
+## Checks and handoff
 
-Für Änderungen an Build-/Kompatibilitätswerkzeugen: `python -m unittest discover
--s tests -v`, `native\build.cmd`, `native\build-extension.cmd rb_bpm_patch`.
-Für Host-/Engine-/UI-Änderungen zusätzlich die betroffenen Integrationstests aus
-der Matrix. Nicht wahllos laufende Decks mit den Diagnosehelfern verändern.
+For build/compatibility tooling changes run `python -m unittest discover -s tests -v`,
+`native\build.cmd` and `native\build-extension.cmd rb_bpm_patch`. For host/engine/UI
+changes also run the affected integration checks from the matrix. Do not alter
+playing decks indiscriminately with diagnostic helpers.
 
-Vor einem Commit `git diff --cached` und die Dateiliste auf generierte Binaries,
-private Daten, Zugangsdaten und große Artefakte prüfen. Keine Herstellerdateien
-mit `git add -f` aufnehmen. Die bestehende Hersteller-Sicherung nie überschreiben.
+Before committing, inspect `git diff --cached` and the file list for generated
+binaries, private data, credentials and large artifacts. Never use `git add -f`
+for vendor files. Never overwrite the existing vendor backup.

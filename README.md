@@ -1,210 +1,211 @@
-# RB PLUS — Live-Tempo-Schritte für Rekordbox
+# RB PLUS — Live tempo steps and deck layouts for Rekordbox
 
-**Der dauerhafte Windows-x64-Patch ist implementiert und lokal installiert.**
-Rekordbox lädt die Erweiterung bei jedem normalen Start selbst. Unter
-**Preferences / Einstellungen → Extensions → RB PLUS** steht
-**BPM / Tempo Step** zur Auswahl:
+**RB PLUS v1.0.0** adds **Preferences → Extensions → RB PLUS** to
+**Rekordbox 7.2.18.0311 on Windows x64**. The extension loads automatically on
+normal startup. No external helper needs to stay open during playback.
 
-- **Default / 0.01 BPM:** unveränderte native Tempoauflösung.
-- **0.1 BPM:** Zehntel-BPM.
-- **1 BPM (integer):** ganze BPM.
+- **BPM / Tempo Step:** Default / 0.01 BPM (native resolution), 0.1 BPM, or 1 BPM.
+- **Waveforms (top to bottom):** any of the 24 waveform orders in Performance →
+  4Deck Horizontal.
+- **Decks (top / bottom):** independently choose the top left/right and bottom
+  left/right decks. All 24 orders are available.
 
-Die Auswahl wird gespeichert und beim nächsten Start übernommen. Bei bereits
-erfassten, geladenen Decks wird der letzte Tempo-Sollwert beim Umschalten sofort
-neu angewendet. Neue Decks werden beim ersten gültigen Tempoaufruf erfasst.
-**Kein externes Tool muss beim Spielen laufen.** Python und die PowerShell-
-Werkzeuge werden nur für Installation, Rückbau und optionale Diagnosen gebraucht.
+Selections take effect immediately and are saved in `rb-bpm.ini`. Previously
+detected, loaded decks reapply their last tempo request when the step changes;
+new decks are detected on their first valid tempo call. Layout choices are
+reapplied after restarting or returning to 4Deck Horizontal. **Default (Rekordbox)**
+restores the native arrangement for each list. Other layouts keep their native
+arrangement. Deck numbers, controls and drop targets follow their deck; logical
+deck IDs, audio routing and MIDI deck assignments remain unchanged.
 
-Der experimentelle Patch quantisiert den **Basis-Tempo-Sollwert vor der
-Audioverarbeitung**. Er schreibt keine Track-BPM, Beatgrids, Metadaten oder
-Rekordbox-Datenbankwerte.
+This experimental patch quantizes the **live base tempo request before audio
+processing**. It does not change track BPM, beatgrids, metadata or database values.
 
-## Neue Rekordbox-Versionen
+## Install the release
 
-Künftig genügt als Auftrag an den Coding-Agent:
+Download the ZIP and its SHA-256 file from [Release v1.0.0](https://github.com/spartokos99/rb-plus/releases/tag/v1.0.0).
+The package includes the tested DLL, installer, uninstaller and an isolated
+Python runtime. The destination laptop needs no Python installation, development
+tools or additional downloads.
 
-> Ich habe eine neue Version von Rekordbox unter `<Pfad>` installiert.
-> Stelle sicher, dass sie mit unserem Tool/Patch kompatibel ist und alle
-> bisher unterstützten Versionen weiterhin funktionieren.
+1. Extract the entire `RB-PLUS-v1.0.0-Rekordbox-7.2.18.0311-Windows-x64.zip`.
+2. Close Rekordbox normally.
+3. Right-click `Install.cmd` and choose **Run as administrator**.
+4. Select the `rekordbox.exe` in your own 7.2.18 installation.
+5. Start Rekordbox normally and open **Preferences → Extensions → RB PLUS**.
 
-[AGENTS.md](AGENTS.md) und [HANDOFF.md](HANDOFF.md) legen den Ablauf fest.
-Das [Build-Register und die Prüfmatrix](compatibility/README.md) erhalten alte
-Versionen und dokumentieren Ergebnisse pro Build. Aktuell ist ausschließlich
-**7.2.18.0311 / Windows x64** unterstützt; neue Versionen werden untersucht und
-additiv aufgenommen, nicht ungeprüft über einen Versionsnamen freigeschaltet.
+`Check-Compatibility.cmd` performs read-only checks. To remove the patch, close
+Rekordbox and run `Uninstall.cmd` as administrator, selecting the same EXE.
+Full instructions are included in `README.txt`.
 
-Für die erste, ausschließlich lesende Prüfung:
+The ZIP contains no Rekordbox EXE, music or database. The installer prepares the
+patched EXE from the exact, verified local installation. Other builds are rejected,
+even if their displayed version matches. The original is preserved as
+`rekordbox.exe.rb-bpm-original`. Existing settings are retained; new installations
+start with Default. Local Windows users receive write access only to `rb-bpm.ini`
+so settings can be saved under Program Files without running Rekordbox as
+administrator. Executable and backup permissions are not broadened.
 
-~~~powershell
-.\Test-RekordboxCompatibility.ps1 -Path 'D:\Programs\rekordbox NEU'
-~~~
+Uninstalling restores the original EXE byte for byte and removes the matching
+DLL. The backup and INI remain. An EXE changed by another update is not overwritten.
+**Do not delete the DLL separately while the EXE is patched:** Windows needs it
+to start Rekordbox. Keep the ZIP for future uninstallation.
 
-Der Check ersetzt keine Live-/Hardwaretests. Unbekannte Builds werden abgelehnt.
-Die Native-/Diagnose-Backends sind derzeit an 7.2.18 gebunden; vor Freigabe eines
-zweiten Builds muss die versionsabhängige Auswahl zusätzlich implementiert werden.
+The file patch invalidates the original vendor signature and removes its PE
+directory reference. Vendor licenses and subscriptions remain required.
+Rekordbox updates may replace the patch; other builds need a separate investigation.
+The package has not been tested on the destination laptop.
 
-## Aus einem frischen Checkout bauen
+## Validation and limitations
 
-Benötigt: Windows x64, Python x64 (lokal mit 3.13 getestet), Visual Studio C++-
-Buildtools einschließlich Windows SDK sowie eine eigene passende Rekordbox-Installation.
-Keine Hersteller-Binaries, Musik, Datenbanken, Dumps oder lokalen Pakete liegen im Git.
-Die Solution gruppiert die Quelldateien; die Build-Skripte erzeugen die DLLs.
+Measured internal audio state with a track whose original BPM is 174:
 
-~~~powershell
-python -m pip install --target .tools/python -r requirements-analysis.txt
-python -m unittest discover -s tests -v
-.\native\build.cmd
-.\native\build-extension.cmd rb_bpm_patch
-python tools/patch_app.py prepare --exe '<ungepatchte Arbeitskopie>\rekordbox.exe'
-~~~
-
-Die Analyse-Abhängigkeiten sind nur für PE-Inspektion/Disassembly nötig. Der
-Kompatibilitätscheck und Installer verwenden die Python-Standardbibliothek.
-MSVC wird über `vswhere` erkannt; alternativ eine x64 Developer Shell verwenden
-oder `RBQ_VCVARS` auf die passende `vcvars64.bat` setzen. Ergebnisse liegen in
-`build/`, lokale Nachweise in `artifacts/`; beides bleibt außerhalb von Git.
-
-Zusätzlicher Dateipaket-Test mit einer eigenen Originaldatei (nur temporäre Kopien):
-
-~~~powershell
-$env:RBQ_TEST_ORIGINAL='<Original oder geprüftes Backup>'
-python -m unittest discover -s tests -v
-Remove-Item Env:RBQ_TEST_ORIGINAL
-~~~
-
-## Installation und Rückbau
-
-Unterstützt wird exakt der untersuchte Windows-x64-Build **7.2.18.0311**.
-Die Installation unter D:\Programs\rekordbox 7.2.18 ist bereits gepatcht.
-Für eine erneute Installation des vorbereiteten Pakets Rekordbox beenden:
-
-~~~powershell
-.\Patch-Rekordbox.ps1 -Action Install
-~~~
-
-Danach Rekordbox normal starten. Neben der geänderten EXE liegen rb_bpm_patch.dll,
-rb-bpm.ini und rb-bpm.patch.json. Die geprüfte Originaldatei wird als
-**rekordbox.exe.rb-bpm-original** gesichert. Wiederholte Installation erkennt
-den vorhandenen Patch; eine vorhandene INI bleibt erhalten. Bei einer neueren
-Erweiterungs-DLL für dieselbe gepatchte EXE werden nur DLL und Manifest
-aktualisiert; installierte DLL und Original-Backup werden zuvor geprüft.
-
-Zum vollständigen Rückbau Rekordbox beenden:
-
-~~~powershell
-.\Patch-Rekordbox.ps1 -Action Restore
-~~~
-
-Der Rückbau stellt die Original-EXE bytegenau wieder her und entfernt die
-passende DLL. Backup und Einstellung bleiben erhalten. Zwischenzeitlich
-veränderte oder aktualisierte EXEs werden nicht überschrieben. Die DLL
-nicht einzeln löschen, solange die EXE gepatcht ist: Windows benötigt sie
-zum Start der Anwendung.
-
-Der Dateipatch macht die ursprüngliche Herstellersignatur ungültig.
-Rekordbox-Updates können ihn ersetzen; andere Builds benötigen eine neue
-Untersuchung und werden von diesem Installer nicht akzeptiert.
-
-## Prüfergebnisse
-
-Deck 1, ursprüngliche BPM 174, laufender interner Audio-Rate-Zustand:
-
-| Modus | Tempo-Eingabe | BPM aus der Audio-Part-Rate |
+| Mode | Requested BPM | BPM from the audio-part rate |
 | --- | ---: | ---: |
 | Default | 175.37 | 175.369995 |
 | 1 BPM | 175.37 | 174.999992 |
 | 0.1 BPM | 175.37 | 175.400009 |
 
-Die Abweichungen entstehen durch die native Float-Repräsentation. Der Wechsel
-von 1 auf 0.1 BPM im eingebetteten Einstellungsfeld änderte die Audio-Part-Rate
-ohne neue Faderbewegung. Die Beatgrid-BPM blieb 174. Dies sind Messungen interner
-Engine-Zustände, keine Aufnahme des Audioausgangs.
+The differences reflect native floating-point representation. Historical tests
+confirmed that changing from 1 to 0.1 BPM reapplies the audio-part rate without
+another fader movement; the beatgrid stayed at 174 BPM. These are internal engine
+measurements, not recordings of the audio output.
 
-Bestanden: Quantisierungs-/Hysteresetests, zwölf Live-Testfälle, GUI-Fader-Sweep,
-Windows-Start eines separat gepatchten Testprogramms, PE-Layout-Prüfungen und
-Installation/Rückbau auf einer Dateikopie. Die installierte Rekordbox-EXE
-wurde zweimal regulär gestartet: Hook und Einstellungsfeld erschienen
-automatisch; die gespeicherte Auswahl **0.1 BPM** blieb erhalten.
+The tested layout build passed all 50 selections (24 + Default per list), actual
+mouse and keyboard input, waveform dragging and Play/Pause mapping for four loaded
+decks, layout switching, saved startup and dialog lifecycle checks. The tempo
+dropdown's popup handling is corrected and tested with actual clicks, Escape and
+outside clicks. Unit tests, native builds, PE checks and the extracted release's
+install/reinstall/update/rollback/uninstall lifecycle are covered separately.
+See the [version report](compatibility/reports/7.2.18.0311-windows-x64.md) for exact
+DLL hashes, dates, repeated checks and historical coverage.
 
-Der Tab RB PLUS wurde anschließend ergänzt: Wechsel zu STEMS, Video, Lighting,
-Audio und View, alle drei Einstellungswerte und fünfmaliges Schließen/Öffnen
-bestanden. Eine dabei gefundene fehlende Nullprüfung bei der UI-Abfrage ist
-in der installierten Fassung korrigiert; Details im Bericht.
+- **DDJ-1000 hardware input is untested:** no controller was connected. The hook
+  sits at a shared setter, but this does not establish hardware coverage.
+- Sync, DVS/CDJ-800, multiple loaded decks, track changes and Export/Performance
+  transitions are not fully validated across the tempo matrix. The UiPlayer type
+  check does not completely identify global Performance mode. **Select Default
+  before leaving Performance.**
+- Jog bend, scratch, reverse and start/stop ramps use additional rate paths.
+  Quantization applies to the base request, not every transient rate.
+- Hysteresis is half a step plus 10% of the step width. With 1 BPM, 175 persists
+  until about 175.60; in reverse, 176 persists until about 175.40. Small relative
+  increments may round back to the same step.
+- Dynamic beatgrid BPM is read on tempo calls; a position change alone does not
+  trigger quantization.
+- At most eight player addresses are tracked per session. Invalid, unknown or
+  concurrent contexts pass through unchanged and are counted diagnostically.
+  Long-session validation remains open.
+- The tab bar and panel are native Windows controls inside Rekordbox, not an
+  official vendor extension. Existing Extensions tabs open their original pages.
+  UI tests used English Preferences at 96 DPI. Other languages and high DPI are
+  untested. UI Automation runs on a separate thread only while Preferences is visible.
 
-Die Mausauswahl im Dropdown ist ebenfalls korrigiert. Alle drei Optionen wurden
-mit echten Mausklicks gegen den aktiven Modus und die gespeicherte INI geprüft;
-Tastaturbedienung sowie Abbruch mit Escape und Außenklick funktionieren ebenfalls.
+Implementation evidence: [tempo investigation](docs/investigation-7.2.18.md) and
+[layout investigation](docs/layout-7.2.18.md). The abandoned 120 Hz investigation
+is archived and is not an implemented or planned feature.
 
-Details und Evidenz: [Untersuchungsbericht](docs/investigation-7.2.18.md).
+## Build from a fresh checkout
 
-## Grenzen
+Requirements: Windows x64, x64 Python (locally tested with 3.13), Visual Studio C++
+Build Tools with the Windows SDK, and your own matching Rekordbox installation.
+The solution groups sources for navigation; CMD scripts build the binaries.
+Vendor binaries, music, databases, dumps and local packages are excluded from Git.
 
-- **DDJ-1000 noch nicht getestet:** Das Gerät war nicht angeschlossen. Der Hook
-  sitzt am gemeinsamen Setter hinter den Tempo-Eingaben; tatsächliche
-  Hardware-Abdeckung muss mit angeschlossenem Controller bestätigt werden.
-- Sync, DVS/CDJ-800, mehrere geladene Decks, Trackwechsel und Export-/Performance-
-  Wechsel sind noch nicht vollständig geprüft. Der UiPlayer-Typcheck erkennt
-  den globalen Performance-Modus nicht lückenlos. **Vor einem Wechsel aus
-  Performance Default auswählen.**
-- Jog-Bend, Scratch, Reverse und Anlauf-/Bremsrampen bleiben zusätzliche Ratenpfade.
-  Es wird der Basis-Sollwert quantisiert, nicht jede momentane Rate dieser Funktionen.
-- Hysterese: halbe Stufe plus 10 % der Stufenbreite. Bei 1 BPM bleibt 175 bis
-  ungefähr 175.60 erhalten; rückwärts bleibt 176 bis ungefähr 175.40 erhalten.
-  Kleine relative Plus-/Minus-Eingaben können auf dieselbe Stufe zurückfallen.
-- Bei dynamischen Beatgrids wird die lokale BPM bei Tempoaufrufen gelesen;
-  Positionsänderungen allein lösen keine neue Quantisierung aus.
-- Höchstens acht Player-Adressen pro Sitzung. Ungültige, unbekannte oder
-  konkurrierende Kontexte passieren unverändert und werden diagnostisch gezählt.
-  Langzeittests stehen aus.
-- Tab-Leiste und RB-PLUS-Seite sind native Windows-Elemente innerhalb des
-  Rekordbox-Dialogs, keine offizielle Herstellererweiterung. Die bisherigen
-  Extensions-Tabs leiten an ihre bestehenden Seiten weiter. Getestet ist der
-  lokale englische Dialog bei 96 DPI. UI-Abfragen erfolgen auf einem getrennten
-  Thread innerhalb Rekordbox und nur bei sichtbaren Einstellungen.
+```powershell
+python -m pip install --target .tools/python -r requirements-analysis.txt
+python -m unittest discover -s tests -v
+.\native\build.cmd
+.\native\build-extension.cmd rb_bpm_patch
+python tools/patch_app.py prepare --exe '<unpatched working copy>\rekordbox.exe'
+```
 
-## Diagnose und Quellcode
+Analysis dependencies are needed only for PE inspection/disassembly. Compatibility
+checks and installation use the Python standard library. MSVC is detected using
+`vswhere`; alternatively use an x64 Developer Shell or point `RBQ_VCVARS` to
+`vcvars64.bat`. Outputs go to `build/`, local evidence to `artifacts/`; neither is
+committed. `prepare` requires a verified **unpatched** file named `rekordbox.exe`.
+If already patched, copy the verified backup to a working directory under that
+name. The current development package is created in `build/permanent`.
 
-Die INI neben der EXE enthält:
+Install or restore that development package with Rekordbox closed:
 
-~~~ini
+```powershell
+.\Patch-Rekordbox.ps1 -Action Install -Exe '<installation>\rekordbox.exe'
+.\Patch-Rekordbox.ps1 -Action Restore -Exe '<installation>\rekordbox.exe'
+```
+
+Repeated installation preserves the INI and verified backup. For an updated DLL
+with the same patched EXE, only the DLL and manifest are updated after validation.
+
+Build and test a release from a DLL recorded as runtime-tested in the registry:
+
+```powershell
+python tools/build_release.py --dll build/permanent/rb_bpm_patch.dll
+$env:RBQ_TEST_ORIGINAL='<verified original or backup>'
+$env:RBQ_TEST_RELEASE='packages/RB-PLUS-v1.0.0-Rekordbox-7.2.18.0311-Windows-x64.zip'
+python -m unittest discover -s tests -v
+```
+
+The package builder uses a local Windows x64 CPython installation with `Lib`,
+`DLLs` and `LICENSE.txt` (currently 3.13.14). An unrecorded DLL is rejected even
+if it compiles successfully. Optional package tests use temporary copies only;
+without the two environment variables, their corresponding tests are skipped.
+
+## Supporting another Rekordbox version
+
+A future request to a coding agent can simply state:
+
+> I installed a new Rekordbox version at `<path>`. Make it compatible with our
+> patch and keep all previously supported versions working.
+
+[AGENTS.md](AGENTS.md), [HANDOFF.md](HANDOFF.md) and the
+[compatibility workflow and matrix](compatibility/README.md) define the complete
+process. Support is additive and tied to exact builds. Only **7.2.18.0311 / Windows
+x64** is currently supported. The native and diagnostic backends are bound to
+7.2.18; explicit backend selection must be implemented before adding a second build.
+
+Start with a read-only check:
+
+```powershell
+.\Test-RekordboxCompatibility.ps1 -Path 'D:\Programs\rekordbox NEW'
+```
+
+A successful static check is not a live or hardware test. Unknown builds are rejected.
+
+## Settings and diagnostics
+
+The INI beside the EXE contains, for example:
+
+```ini
 [Tempo]
 Step=0.1
-~~~
+[Layout]
+WaveOrder=3124
+DeckOrder=3214
+```
 
-Gültig sind default, 0.1 und 1. Manuelle Dateiänderungen werden beim nächsten
-Start gelesen; während der Laufzeit das Einstellungsfeld verwenden.
+Tempo accepts `default`, `0.1` or `1`; layout accepts `default` or any permutation
+of `1234`. Missing/invalid layout values use Default. Manual file changes are
+read at the next startup; use the panel while Rekordbox is running.
 
-~~~powershell
+```powershell
 .\Set-TempoStep.ps1 -Step Status
 .\Observe-Tempo.ps1 -Seconds 30
-~~~
+```
 
-Der Beobachter injiziert nichts und schreibt keinen Prozessspeicher. Logs liegen
-unter artifacts/. owner bezeichnet eine Adresse, keine Decknummer; grid_bpm
-ist die lokale Beatgrid-BPM. Die Snapshots sind nicht atomar.
+The observer injects nothing and writes no process memory. Logs go to `artifacts/`.
+`owner` is an address, not a deck number; `grid_bpm` is the local beatgrid BPM.
+Snapshots are not atomic. `Start-Control.cmd` and `Set-TempoStep.ps1` are optional
+diagnostic controls. With the permanent patch, mode changes are saved and Stop is
+blocked: use Default to disable quantization or uninstall to remove the patch.
+Close Preferences before changing modes externally: Rekordbox does not reliably
+expose its Performance display to UI Automation while the modal dialog is open.
+The embedded panel works directly in the open dialog.
 
-Start-Control.cmd und Set-TempoStep.ps1 bleiben optionale Diagnosebedienungen.
-Beim permanenten Patch speichern Modusänderungen ebenfalls die Auswahl.
-Stop ist dort gesperrt: zum Abschalten Default, zum Entfernen den Rückbau nutzen.
-Für externe Modusänderungen den Preferences-Dialog schließen: Solange der
-modale Dialog offen ist, stellt Rekordbox seine Performance-Anzeige nicht
-zuverlässig für die UI-Automation bereit. Das eingebettete Feld funktioniert
-direkt im geöffneten Dialog.
-
-~~~powershell
-.\native\build.cmd                          # Tests + älterer Runtime-Hook
-.\native\build-extension.cmd rb_bpm_patch   # dauerhafte Erweiterung
-python tools/patch_app.py prepare --exe 'D:\Programs\rekordbox 7.2.18\rekordbox.exe'
-~~~
-
-prepare benötigt eine **ungepatchte** Originaldatei namens rekordbox.exe.
-Bei installiertem Patch eine Arbeitskopie des geprüften Backups unter diesem
-Namen verwenden. Das aktuelle 7.2.18-Paket entsteht in build/permanent.
-Die Build-Skripte erkennen MSVC automatisch; Details oben.
-
-Implementierung: native/tempo_hook.cpp (Setter), native/tempo_extension.cpp
-(Start, Einstellungsfeld, Speichern und Neuanwendung), native/preferences_tabs.h
-(Extensions und RB PLUS), tools/pe_startup_patch.py
-(PE-Patch), tools/patch_app.py (Installation/Rückbau).
-Der ältere Test tools/verify_live.py benötigt den Runtime-Hook und verändert
-ausdrücklich das Deck-Tempo; er ist kein passiver Monitor.
+Core sources: `native/tempo_hook.cpp` (setter), `native/tempo_extension.cpp`
+(startup, settings, persistence and reapplication), `native/preferences_tabs.h`
+(Extensions navigation), `native/layout_extension.h` (layout),
+`tools/pe_startup_patch.py` (PE patch), `tools/patch_app.py` (installation/restoration).
+The older `tools/verify_live.py` requires the diagnostic runtime hook and actively
+changes deck tempo; it is not a passive monitor.
